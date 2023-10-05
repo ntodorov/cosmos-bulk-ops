@@ -39,6 +39,8 @@ program
 
 program.parse();
 
+// console.dir(program.opts());
+
 const client = new CosmosClient({
   endpoint: endpoint,
   key: key,
@@ -60,7 +62,7 @@ async function main() {
       `${res.resources} Existing records in container ${containerId} `
     );
 
-    await bulkUpsertFolder(container, dataFolder);
+    await bulkUpsertFolder(container, program.opts().dataFolder);
 
     const res2 = await container.items.query(querySpec).fetchAll();
     console.log(`${res2.resources} records after the operation `);
