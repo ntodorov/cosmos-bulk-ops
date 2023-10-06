@@ -42,8 +42,9 @@ NOTE: if you want to save all console output to a file, use the redirect output 
 
 ##TODO
 
+- [ ] FIX the hardcoded partition key value in the Delete operation
 - [ ] handle throttling errors, by retrying the operations configurable number of times
-- [ ] add support for other bulk operation Create
+- [ ] add support bulk operation "Create"
 - [ ] make it npm package
 
 ## License
