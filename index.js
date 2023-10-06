@@ -32,7 +32,7 @@ program
       .makeOptionMandatory()
   )
   .addOption(
-    new Option('-op, --bulk-operation <type>', 'what bulk operation to run')
+    new Option('-o, --bulk-operation <type>', 'what bulk operation to run')
       .choices(['Create', 'Upsert', 'Delete'])
       .makeOptionMandatory()
   );
@@ -51,8 +51,6 @@ const querySpec = {
   parameters: [],
 };
 
-const throttlingErrors = [];
-
 async function main() {
   try {
     const container = client.database(databaseId).container(containerId);
@@ -62,7 +60,19 @@ async function main() {
       `${res.resources} Existing records in container ${containerId} `
     );
 
-    await bulkUpsertFolder(container, program.opts().dataFolder);
+    switch (program.opts().bulkOperation) {
+      case 'Create':
+        console.warn('Create is not implemented yet');
+        break;
+      case 'Upsert':
+        await bulkUpsertFolder(container, program.opts().dataFolder);
+        break;
+      case 'Delete':
+        console.warn('Delete is not implemented yet');
+        break;
+      default:
+        console.error('Invalid bulk operation');
+    }
 
     const res2 = await container.items.query(querySpec).fetchAll();
     console.log(`${res2.resources} records after the operation `);
