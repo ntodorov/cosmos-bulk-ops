@@ -5,6 +5,7 @@ const {
   loadFile,
   formatTime,
   loadJsonFileNames,
+  logErrors,
 } = require('./utils');
 
 const throttlingErrors = [];
@@ -40,12 +41,7 @@ async function bulkDeleteFromFolder(container, dataFolder) {
   console.log(`Total Records: ${totalRecords}`);
   console.log('END of bulk Delete process');
 
-  if (throttlingErrors.length > 0) {
-    console.log(
-      `There were ${throttlingErrors.length} throttling errors during the process`
-    );
-    console.dir(throttlingErrors);
-  }
+  logErrors(throttlingErrors);
 }
 
 async function processFile(container, fullFileName) {

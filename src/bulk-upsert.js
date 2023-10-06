@@ -39,6 +39,8 @@ async function bulkUpsertFolder(container, dataFolder) {
   console.log(`Total Execution time: ${formattedTime}`);
   console.log(`Total Records: ${totalRecords}`);
   console.log('END of bulk Upsert process');
+
+  logErrors(throttlingErrors);
 }
 
 async function processFile(container, fullFileName) {
@@ -66,10 +68,15 @@ async function processFile(container, fullFileName) {
     // Pass the removed elements array to the function
     const { operations, res } = await bulkUpsert(removedElements, container);
 
-    res.forEach((element) => {
+    for (let i = 0; i < res.length; i++) {
+      const element = res[i];
       if (![201, 200].includes(element.statusCode))
-        throttlingErrors.push({ fileName: fullFileName, element });
-    });
+        throttlingErrors.push({
+          fileName: fullFileName,
+          operation: operations[i],
+          error: element,
+        });
+    }
 
     // console.log(`inserted ${res.length} docs, ${documents.length} remaining`);
   }
