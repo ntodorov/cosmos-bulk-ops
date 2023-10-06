@@ -10,7 +10,7 @@ const {
 const throttlingErrors = [];
 
 //load json files from folder and excute the runForFile function
-async function bulkUpsertFolder(container, dataFolder) {
+async function bulkDeleteFromFolder(container, dataFolder) {
   const start = new Date().getTime();
   let totalRecords = 0;
 
@@ -18,7 +18,7 @@ async function bulkUpsertFolder(container, dataFolder) {
 
   validateFiles(jsonFiles, dataFolder);
 
-  console.log('STARTING bulk Upsert process:');
+  console.log('STARTING bulk Delete process:');
   const fileCount = jsonFiles.length;
   let i = 1;
   for (const file of jsonFiles) {
@@ -38,7 +38,14 @@ async function bulkUpsertFolder(container, dataFolder) {
   const formattedTime = formatTime(time);
   console.log(`Total Execution time: ${formattedTime}`);
   console.log(`Total Records: ${totalRecords}`);
-  console.log('END of bulk Upsert process');
+  console.log('END of bulk Delete process');
+
+  if (throttlingErrors.length > 0) {
+    console.log(
+      `There were ${throttlingErrors.length} throttling errors during the process`
+    );
+    console.dir(throttlingErrors);
+  }
 }
 
 async function processFile(container, fullFileName) {
@@ -62,16 +69,18 @@ async function processFile(container, fullFileName) {
     // Remove the elements from the array
     let removedElements = documents.splice(0, numElementsToRemove);
 
-    // console.log(`about to insert ${removedElements.length} documents`);
     // Pass the removed elements array to the function
-    const { operations, res } = await bulkUpsert(removedElements, container);
+    const { operations, res } = await bulkDelete(removedElements, container);
 
-    res.forEach((element) => {
-      if (![201, 200].includes(element.statusCode))
-        throttlingErrors.push({ fileName: fullFileName, element });
-    });
-
-    // console.log(`inserted ${res.length} docs, ${documents.length} remaining`);
+    for (let i = 0; i < res.length; i++) {
+      const element = res[i];
+      if (![204].includes(element.statusCode))
+        throttlingErrors.push({
+          fileName: fullFileName,
+          operation: operations[i],
+          error: element,
+        });
+    }
   }
 
   const endFileTotal = new Date().getTime();
@@ -82,19 +91,26 @@ async function processFile(container, fullFileName) {
 }
 
 //THE bulkInsert function - more than 5 documents was giving me throttling errors even in 10000 RU/s
-async function bulkUpsert(documents, container) {
+async function bulkDelete(documents, container) {
   //map funciton that transforms the array of documents into an array of operations
   const operations = documents.map((doc) => {
     return {
-      operationType: BulkOperationType.Upsert,
-      resourceBody: doc,
+      operationType: BulkOperationType.Delete,
+      id: doc.id,
+      partitionKey: doc.DocumentLibrary,
     };
   });
 
+  // console.dir(operations);
+
   //execute the bulk operation - continueOnError is set to true, so if there are any errors, they will be in the res
-  const res = await container.items.bulk(operations, { continueOnError: true });
+  const res = await container.items.bulk(operations, {
+    continueOnError: true,
+  });
+
+  // console.dir(res);
 
   return { operations, res };
 }
 
-module.exports = { bulkUpsertFolder };
+module.exports = { bulkDeleteFromFolder };

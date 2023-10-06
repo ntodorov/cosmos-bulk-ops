@@ -7,6 +7,7 @@ const path = require('path');
 
 const { bulkUpsertFolder } = require('./src/bulk-upsert');
 const { exit } = require('process');
+const { bulkDeleteFromFolder } = require('./src/bulk-delete');
 
 //get command line arguments
 const program = new Command();
@@ -77,7 +78,7 @@ async function main() {
         await bulkUpsertFolder(container, program.opts().dataFolder);
         break;
       case 'Delete':
-        console.warn('Delete is not implemented yet');
+        await bulkDeleteFromFolder(container, program.opts().dataFolder);
         break;
       default:
         console.error('Invalid bulk operation');
