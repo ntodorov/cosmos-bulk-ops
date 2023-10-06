@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('dotenv').config();
+const dotenv = require('dotenv');
 const { Command, Option } = require('commander');
 const { CosmosClient, BulkOperationType } = require('@azure/cosmos');
 const fs = require('fs');
@@ -7,12 +7,6 @@ const path = require('path');
 
 const { bulkUpsertFolder } = require('./src/bulk-upsert');
 const { exit } = require('process');
-
-//get environment variables
-const endpoint = process.env.COSMOS_DB_ENDPOINT;
-const key = process.env.COSMOS_DB_KEY;
-const databaseId = process.env.DATABASE_NAME;
-const containerId = process.env.CONTAINER_NAME;
 
 //get command line arguments
 const program = new Command();
@@ -41,11 +35,23 @@ program.parse();
 
 // console.dir(program.opts());
 
-const client = new CosmosClient({
-  endpoint: endpoint,
-  key: key,
-});
+//Initialize Environment
+function initEnv(env) {
+  // load environment variables from .env.dev file
+  dotenv.config({ path: `.env.${env}` });
+  //get environment variables
+  const endpoint = process.env.COSMOS_DB_ENDPOINT;
+  const key = process.env.COSMOS_DB_KEY;
+  const databaseId = process.env.DATABASE_NAME;
+  const containerId = process.env.CONTAINER_NAME;
 
+  const client = new CosmosClient({
+    endpoint: endpoint,
+    key: key,
+  });
+
+  return { client, databaseId, containerId };
+}
 const querySpec = {
   query: 'SELECT VALUE COUNT(1) FROM c',
   parameters: [],
@@ -53,6 +59,9 @@ const querySpec = {
 
 async function main() {
   try {
+    // Initialize environment
+    const { client, databaseId, containerId } = initEnv(program.opts().env);
+
     const container = client.database(databaseId).container(containerId);
     // check how many records are in the container
     const res = await container.items.query(querySpec).fetchAll();
