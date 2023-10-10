@@ -12,6 +12,9 @@ Clone the repository and install all dependencies with:
 To run the application, use the following command:
 `node index.js --env dev --bulk-operation Upsert --data-folder ./data`
 
+Delete operation example:
+`node index.js --env dev --bulk-operation Upsert --data-folder ./data --partition-key UserId`
+
 The following options are available:
 
 - `-df, --data-folder <name>`: The full folder name where the JSON files are located (required).
