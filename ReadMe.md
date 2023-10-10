@@ -17,6 +17,7 @@ The following options are available:
 - `-df, --data-folder <name>`: The full folder name where the JSON files are located (required).
 - `-e, --env <name>`: The environment to run the bulk operation in (required). Valid values are `dev`, `tst`, `uat`, `prd`, and `sbx`.
 - `-o, --bulk-operation <type>`: The type of bulk operation to run (required). Valid values are `Create`, `Upsert`, and `Delete`.
+- `-pk, --partition-key <fieldName>`: what is the field name to get partition key value. Required only for Delete operation. NOTE: For now supports only top level fields in the document.
 
 ## Configuration
 
@@ -42,10 +43,12 @@ NOTE: if you want to save all console output to a file, use the redirect output 
 
 ##TODO
 
-- [ ] FIX the hardcoded partition key value in the Delete operation
+- [x] FIX the hardcoded partition key value in the Delete operation
 - [ ] handle throttling errors, by retrying the operations configurable number of times
 - [ ] add support bulk operation "Create"
+- [ ] add tests
 - [ ] make it npm package
+- [ ] support for nested partition key fields, example: `address.city`
 
 ## License
 
