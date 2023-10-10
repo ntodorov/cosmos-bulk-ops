@@ -5,6 +5,7 @@ const {
   loadFile,
   formatTime,
   loadJsonFileNames,
+  logErrors,
 } = require('./utils');
 
 const throttlingErrors = [];

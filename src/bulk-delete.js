@@ -11,7 +11,7 @@ const {
 const throttlingErrors = [];
 
 //load json files from folder and excute the runForFile function
-async function bulkDeleteFromFolder(container, dataFolder) {
+async function bulkDeleteFromFolder(container, dataFolder, partitionKey) {
   const start = new Date().getTime();
   let totalRecords = 0;
 
@@ -28,7 +28,8 @@ async function bulkDeleteFromFolder(container, dataFolder) {
     const fullFileName = path.join(dataFolder, file);
     const { documentCount, fileProcessTime } = await processFile(
       container,
-      fullFileName
+      fullFileName,
+      partitionKey
     );
     totalRecords += documentCount;
     console.log(`  done: ${documentCount} records for ${fileProcessTime}ms`);
@@ -44,7 +45,7 @@ async function bulkDeleteFromFolder(container, dataFolder) {
   logErrors(throttlingErrors);
 }
 
-async function processFile(container, fullFileName) {
+async function processFile(container, fullFileName, partitionKey) {
   // console.log('START: Loading the json file');
   // Load external JSON
   const { documents } = loadFile(fullFileName);
@@ -66,7 +67,11 @@ async function processFile(container, fullFileName) {
     let removedElements = documents.splice(0, numElementsToRemove);
 
     // Pass the removed elements array to the function
-    const { operations, res } = await bulkDelete(removedElements, container);
+    const { operations, res } = await bulkDelete(
+      removedElements,
+      container,
+      partitionKey
+    );
 
     for (let i = 0; i < res.length; i++) {
       const element = res[i];
@@ -87,13 +92,16 @@ async function processFile(container, fullFileName) {
 }
 
 //THE bulkInsert function - more than 5 documents was giving me throttling errors even in 10000 RU/s
-async function bulkDelete(documents, container) {
+async function bulkDelete(documents, container, partitionKey) {
   //map funciton that transforms the array of documents into an array of operations
   const operations = documents.map((doc) => {
+    // console.log(doc);
+    // console.log(partitionKey);
+    // console.log(doc[partitionKey]);
     return {
       operationType: BulkOperationType.Delete,
       id: doc.id,
-      partitionKey: doc.DocumentLibrary,
+      partitionKey: doc[partitionKey],
     };
   });
 

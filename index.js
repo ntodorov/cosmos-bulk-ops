@@ -30,11 +30,21 @@ program
     new Option('-o, --bulk-operation <type>', 'what bulk operation to run')
       .choices(['Create', 'Upsert', 'Delete'])
       .makeOptionMandatory()
+  )
+  .option(
+    '-pk, --partition-key <fieldName>',
+    'what is the field name to get partition key value. Required only for Delete operation'
   );
 
 program.parse();
 
-// console.dir(program.opts());
+console.dir(program.opts());
+
+// validate the Delete operation that requires partition key
+if (program.opts().bulkOperation === 'Delete' && !program.opts().partitionKey) {
+  console.error('Option -pk is required when -o is Delete');
+  process.exit(1);
+}
 
 //Initialize Environment
 function initEnv(env) {
@@ -78,7 +88,12 @@ async function main() {
         await bulkUpsertFolder(container, program.opts().dataFolder);
         break;
       case 'Delete':
-        await bulkDeleteFromFolder(container, program.opts().dataFolder);
+        console.log(program.opts().partitionKey);
+        await bulkDeleteFromFolder(
+          container,
+          program.opts().dataFolder,
+          program.opts().partitionKey
+        );
         break;
       default:
         console.error('Invalid bulk operation');
