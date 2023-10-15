@@ -1,6 +1,7 @@
 # CosmosDB Bulk Ops
 
-Load JSON files with objects in array, and runs bulk operations on them - Create, Upsert, Delete.
+Load JSON files with objects in array, and runs bulk operations on them - Create, Upsert,
+OR provide inline query or query in file for Delete.
 
 ## Installation
 
