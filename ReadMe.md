@@ -13,14 +13,17 @@ To run the application, use the following command:
 `node index.js --env dev --bulk-operation Upsert --data-folder ./data`
 
 Delete operation example:
-`node index.js --env dev --bulk-operation Upsert --data-folder ./data --partition-key UserId`
+`node index.js --env dev --bulk-operation Upsert --data-folder ./data --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"`
 
-The following options are available:
+## Parameters
 
-- `-df, --data-folder <name>`: The full folder name where the JSON files are located (required).
-- `-e, --env <name>`: The environment to run the bulk operation in (required). Valid values are `dev`, `tst`, `uat`, `prd`, and `sbx`.
-- `-o, --bulk-operation <type>`: The type of bulk operation to run (required). Valid values are `Create`, `Upsert`, and `Delete`.
-- `-pk, --partition-key <fieldName>`: what is the field name to get partition key value. Required only for Delete operation. NOTE: For now supports only top level fields in the document.
+The following command line parameters are available:
+
+- `-e, --env <name>`: The environment to use. Required. Valid values are `dev`, `tst`, `uat`, `prd`, and `sbx`.
+- `-o, --bulk-operation <type>`: The bulk operation to run. Required. Valid values are `Create`, `Upsert`, and `Delete`.
+- `-q, --query <simple query>`: A simple query that returns the records to be deleted. Example: `SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.id = "1"`. Required only for Delete operation and only one of `-q` and `-qf` should be used.
+- `-qf, --queryFile <fullQueryFileName>`: The file name with full path to the file with the query that returns the records to be deleted. `-q` takes precedence over `-qf`. If both provided, `-qf` will be ignored.
+- `-df, --data-folder <name>`: The full folder name where the JSON files are located. Required for the `Upsert` operation.
 
 ## Configuration
 

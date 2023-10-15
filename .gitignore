@@ -109,5 +109,5 @@ dist
 
 # IDE's
 .idea
-
+.vscode
 

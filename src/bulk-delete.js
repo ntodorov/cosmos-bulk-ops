@@ -1,103 +1,66 @@
 const { BulkOperationType } = require('@azure/cosmos');
 const path = require('path');
-const {
-  validateFiles,
-  loadFile,
-  formatTime,
-  loadJsonFileNames,
-  logErrors,
-} = require('./utils');
+const fs = require('fs');
+
+const { formatTime, logErrors } = require('./utils');
 
 const throttlingErrors = [];
 
-//load json files from folder and excute the runForFile function
-async function bulkDeleteFromFolder(container, dataFolder, partitionKey) {
+async function bulkDeleteFromFile(container, queryFile) {
+  const query = fs.readFileSync(queryFile, 'utf8');
+  await bulkDeleteFromQuery(container, query);
+}
+
+async function bulkDeleteFromQuery(container, query) {
   const start = new Date().getTime();
-  let totalRecords = 0;
 
-  const jsonFiles = loadJsonFileNames(dataFolder);
+  const { resource } = await container.read();
 
-  validateFiles(jsonFiles, dataFolder);
+  const partitionKey = resource.partitionKey.paths[0].replace('/', '');
+  // console.log('Partition Key:', partitionKey);
+
+  const MAX_CONCURRENT_OPERATIONS = process.env.MAX_CONCURRENT_OPERATIONS || 5;
+  const queryIterator = await container.items.query(query, {
+    maxItemCount: MAX_CONCURRENT_OPERATIONS,
+  });
 
   console.log('STARTING bulk Delete process:');
-  const fileCount = jsonFiles.length;
-  let i = 1;
-  for (const file of jsonFiles) {
-    console.log(` file ${i} of ${fileCount}: "${file}"`);
-    ++i;
-    const fullFileName = path.join(dataFolder, file);
-    const { documentCount, fileProcessTime } = await processFile(
-      container,
-      fullFileName,
-      partitionKey
-    );
-    totalRecords += documentCount;
-    console.log(`  done: ${documentCount} records for ${fileProcessTime}ms`);
+  let count = 0;
+  while (queryIterator.hasMoreResults()) {
+    const { resources: results } = await queryIterator.fetchNext();
+    if (results != undefined) {
+      count = count + results.length;
+
+      const { operations, res } = await bulkDelete(
+        results,
+        container,
+        partitionKey
+      );
+
+      for (let i = 0; i < res.length; i++) {
+        const element = res[i];
+        if (![204].includes(element.statusCode))
+          throttlingErrors.push({
+            operation: operations[i],
+            error: element,
+          });
+      }
+    }
   }
 
   const end = new Date().getTime();
   const time = end - start;
   const formattedTime = formatTime(time);
   console.log(`Total Execution time: ${formattedTime}`);
-  console.log(`Total Records: ${totalRecords}`);
+  console.log(`Total Records: ${count}`);
   console.log('END of bulk Delete process');
 
   logErrors(throttlingErrors);
 }
 
-async function processFile(container, fullFileName, partitionKey) {
-  // console.log('START: Loading the json file');
-  // Load external JSON
-  const { documents } = loadFile(fullFileName);
-  const documentCount = documents.length;
-
-  // to measure the total execution time
-  const startFileTotal = new Date().getTime();
-
-  const MAX_CONCURRENT_OPERATIONS = process.env.MAX_CONCURRENT_OPERATIONS || 5;
-  // prepare the batches for bulk insert
-  while (documents.length > 0) {
-    // Determine the number of elements to remove
-    let numElementsToRemove = Math.min(
-      MAX_CONCURRENT_OPERATIONS,
-      documents.length
-    );
-
-    // Remove the elements from the array
-    let removedElements = documents.splice(0, numElementsToRemove);
-
-    // Pass the removed elements array to the function
-    const { operations, res } = await bulkDelete(
-      removedElements,
-      container,
-      partitionKey
-    );
-
-    for (let i = 0; i < res.length; i++) {
-      const element = res[i];
-      if (![204].includes(element.statusCode))
-        throttlingErrors.push({
-          fileName: fullFileName,
-          operation: operations[i],
-          error: element,
-        });
-    }
-  }
-
-  const endFileTotal = new Date().getTime();
-  const fileProcessTime = endFileTotal - startFileTotal;
-  // console.log(`--- File Execution time: ${fileProcessTime}ms`);
-
-  return { documentCount, fileProcessTime };
-}
-
-//THE bulkInsert function - more than 5 documents was giving me throttling errors even in 10000 RU/s
 async function bulkDelete(documents, container, partitionKey) {
   //map funciton that transforms the array of documents into an array of operations
   const operations = documents.map((doc) => {
-    // console.log(doc);
-    // console.log(partitionKey);
-    // console.log(doc[partitionKey]);
     return {
       operationType: BulkOperationType.Delete,
       id: doc.id,
@@ -117,4 +80,4 @@ async function bulkDelete(documents, container, partitionKey) {
   return { operations, res };
 }
 
-module.exports = { bulkDeleteFromFolder };
+module.exports = { bulkDeleteFromQuery, bulkDeleteFromFile };

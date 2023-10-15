@@ -7,7 +7,10 @@ const path = require('path');
 
 const { bulkUpsertFolder } = require('./src/bulk-upsert');
 const { exit } = require('process');
-const { bulkDeleteFromFolder } = require('./src/bulk-delete');
+const {
+  bulkDeleteFromQuery,
+  bulkDeleteFromFile,
+} = require('./src/bulk-delete');
 
 //get command line arguments
 const program = new Command();
@@ -17,10 +20,7 @@ program
     'Load JSON files with objects in array, and runs bulk operations on them - Create, Upsert, Delete.'
   )
   .version('1.0.0')
-  .requiredOption(
-    '-df, --data-folder <name>',
-    'the full folder name where the JSON files are located'
-  )
+
   .addOption(
     new Option('-e, --env <name>', 'environment')
       .choices(['dev', 'tst', 'uat', 'prd', 'sbx'])
@@ -32,17 +32,33 @@ program
       .makeOptionMandatory()
   )
   .option(
-    '-pk, --partition-key <fieldName>',
-    'what is the field name to get partition key value. Required only for Delete operation'
+    '-q, --query <simple query>',
+    'A simple query that returs the records to be deleted. Example: SELECT * FROM c WHERE c.id = "1"'
+  )
+  .option(
+    '-qf, --queryFile <fullQueryFileName>',
+    'fileName with full path to file with query that returs the records to be deleted. -q takes precedence over -qf'
+  )
+  .option(
+    '-df, --data-folder <name>',
+    'the full folder name where the JSON files are located'
   );
 
 program.parse();
 
 console.dir(program.opts());
 
-// validate the Delete operation that requires partition key
-if (program.opts().bulkOperation === 'Delete' && !program.opts().partitionKey) {
-  console.error('Option -pk is required when -o is Delete');
+// the Delete operation requires query or queryFile
+if (
+  program.opts().bulkOperation === 'Delete' &&
+  !(program.opts().query || program.opts().queryFile)
+) {
+  console.error('Option -q or -qf is required when -o is Delete');
+  process.exit(1);
+}
+// the Upsert operation requires data folder
+if (program.opts().bulkOperation === 'Upsert' && !program.opts().dataFolder) {
+  console.error('Option -df is required when -o is Upsert');
   process.exit(1);
 }
 
@@ -88,12 +104,10 @@ async function main() {
         await bulkUpsertFolder(container, program.opts().dataFolder);
         break;
       case 'Delete':
-        console.log(program.opts().partitionKey);
-        await bulkDeleteFromFolder(
-          container,
-          program.opts().dataFolder,
-          program.opts().partitionKey
-        );
+        if (program.opts().query)
+          //-q takes precedence over -qf
+          await bulkDeleteFromQuery(container, program.opts().query);
+        else await bulkDeleteFromFile(container, program.opts().queryFile);
         break;
       default:
         console.error('Invalid bulk operation');
