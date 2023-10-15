@@ -11,20 +11,26 @@ Clone the repository and install all dependencies with:
 ## Usage
 
 To run the application, use the following command:
-`node index.js --env dev --bulk-operation Upsert --data-folder ./data`
+
+```bash
+node index.js --bulk-operation Upsert --data-folder ./data --env dev
+```
 
 Delete operation example:
-`node index.js --env dev --bulk-operation Delete --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"`
+
+```bash
+node index.js --bulk-operation Delete --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"
+```
 
 ## Parameters
 
 The following command line parameters are available:
 
-- `-e, --env <name>`: The environment to use. Required. Valid values are `dev`, `tst`, `uat`, `prd`, and `sbx`.
 - `-o, --bulk-operation <type>`: The bulk operation to run. Required. Valid values are `Create`, `Upsert`, and `Delete`.
 - `-q, --query <simple query>`: A simple query that returns the records to be deleted. Example: `SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.id = "1"`. Required only for Delete operation and only one of `-q` and `-qf` should be used.
 - `-qf, --queryFile <fullQueryFileName>`: The file name with full path to the file with the query that returns the records to be deleted. `-q` takes precedence over `-qf`. If both provided, `-qf` will be ignored.
 - `-df, --data-folder <name>`: The full folder name where the JSON files are located. Required for the `Upsert` operation.
+- `-e, --env <name>`: environment name like dev, qa, prod. You need to have `.env.<name>` file in the root folder, so dotenv can load it. If not provided the tool will load the `.env` file.
 
 ## Configuration
 

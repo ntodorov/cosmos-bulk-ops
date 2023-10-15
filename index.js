@@ -20,12 +20,6 @@ program
     'Load JSON files with objects in array, and runs bulk operations on them - Create, Upsert, Delete.'
   )
   .version('1.0.0')
-
-  .addOption(
-    new Option('-e, --env <name>', 'environment')
-      .choices(['dev', 'tst', 'uat', 'prd', 'sbx'])
-      .makeOptionMandatory()
-  )
   .addOption(
     new Option('-o, --bulk-operation <type>', 'what bulk operation to run')
       .choices(['Create', 'Upsert', 'Delete'])
@@ -42,6 +36,10 @@ program
   .option(
     '-df, --data-folder <name>',
     'the full folder name where the JSON files are located'
+  )
+  .option(
+    '-e, --env <name>',
+    'environment name like dev, qa, prod. You need to have .env.<name> file in the root folder. If not provided the tool will use .env file'
   );
 
 program.parse();
