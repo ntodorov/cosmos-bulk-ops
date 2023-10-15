@@ -14,7 +14,7 @@ To run the application, use the following command:
 `node index.js --env dev --bulk-operation Upsert --data-folder ./data`
 
 Delete operation example:
-`node index.js --env dev --bulk-operation Upsert --data-folder ./data --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"`
+`node index.js --env dev --bulk-operation Delete --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"`
 
 ## Parameters
 
