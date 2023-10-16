@@ -1,10 +1,7 @@
 #!/usr/bin/env node
-const dotenv = require('dotenv');
+
 const { Command, Option } = require('commander');
 const { CosmosClient, BulkOperationType } = require('@azure/cosmos');
-const fs = require('fs');
-const path = require('path');
-
 const { bulkUpsertFolder } = require('./src/bulk-upsert');
 const { exit } = require('process');
 const {
@@ -12,63 +9,31 @@ const {
   bulkDeleteFromFile,
 } = require('./src/bulk-delete');
 
-//get command line arguments
-const program = new Command();
-program
-  .name('CosmosDB Bulk Ops')
-  .description(
-    'Load JSON files with objects in array, and runs bulk operations on them - Create, Upsert, Delete.'
-  )
-  .version('1.0.0')
-  .addOption(
-    new Option('-o, --bulk-operation <type>', 'what bulk operation to run')
-      .choices(['Create', 'Upsert', 'Delete'])
-      .makeOptionMandatory()
-  )
-  .option(
-    '-q, --query <simple query>',
-    'A simple query that returs the records to be deleted. Example: SELECT * FROM c WHERE c.id = "1"'
-  )
-  .option(
-    '-qf, --queryFile <fullQueryFileName>',
-    'fileName with full path to file with query that returs the records to be deleted. -q takes precedence over -qf'
-  )
-  .option(
-    '-df, --data-folder <name>',
-    'the full folder name where the JSON files are located'
-  )
-  .option(
-    '-e, --env <name>',
-    'environment name like dev, qa, prod. You need to have .env.<name> file in the root folder. If not provided the tool will use .env file'
-  );
-
-program.parse();
-
-console.dir(program.opts());
-
-// the Delete operation requires query or queryFile
-if (
-  program.opts().bulkOperation === 'Delete' &&
-  !(program.opts().query || program.opts().queryFile)
-) {
-  console.error('Option -q or -qf is required when -o is Delete');
-  process.exit(1);
-}
-// the Upsert operation requires data folder
-if (program.opts().bulkOperation === 'Upsert' && !program.opts().dataFolder) {
-  console.error('Option -df is required when -o is Upsert');
-  process.exit(1);
-}
-
 //Initialize Environment
 function initEnv(env) {
-  // load environment variables from .env.dev file
-  dotenv.config({ path: `.env.${env}` });
+  if (!env) {
+    console.debug('Initializing... using .env file');
+    require('dotenv').config();
+  } else {
+    console.debug(
+      `Initializing... Environment name ${env} - using .env.${env} file`
+    );
+    // load environment variables from .env.dev file
+    require('dotenv').config({ path: `.env.${env}` });
+  }
   //get environment variables
   const endpoint = process.env.COSMOS_DB_ENDPOINT;
   const key = process.env.COSMOS_DB_KEY;
   const databaseId = process.env.DATABASE_NAME;
   const containerId = process.env.CONTAINER_NAME;
+
+  if (!endpoint)
+    throw new Error('Environment variable COSMOS_DB_ENDPOINT is required!');
+  if (!key) throw new Error('Environment variable COSMOS_DB_KEY is required!');
+  if (!databaseId)
+    throw new Error('Environment variable DATABASE_NAME is required!');
+  if (!containerId)
+    throw new Error('Environment variable CONTAINER_NAME is required!');
 
   const client = new CosmosClient({
     endpoint: endpoint,
@@ -77,49 +42,99 @@ function initEnv(env) {
 
   return { client, databaseId, containerId };
 }
+
 const querySpec = {
   query: 'SELECT VALUE COUNT(1) FROM c',
   parameters: [],
 };
 
-async function main() {
+const upsertOp = async (dataFolder) => {
+  // Initialize environment
+  const { client, databaseId, containerId } = initEnv(program.opts().env);
+  const container = client.database(databaseId).container(containerId);
+
+  // check how many records are in the container
+  const res = await container.items.query(querySpec).fetchAll();
+  console.log(`${res.resources} Existing records in container ${containerId} `);
+
+  //UPsert data from folder
+  await bulkUpsertFolder(container, dataFolder);
+
+  const res2 = await container.items.query(querySpec).fetchAll();
+  console.log(`${res2.resources} records after the operation `);
+};
+
+const deleteOp = async ({ query, queryFile }) => {
   try {
+    if (!query && !queryFile)
+      throw new Error(
+        'delete operation to work -q or -qf must be provided! run "cbops delete --help" for more info'
+      );
+
     // Initialize environment
     const { client, databaseId, containerId } = initEnv(program.opts().env);
-
     const container = client.database(databaseId).container(containerId);
+
     // check how many records are in the container
     const res = await container.items.query(querySpec).fetchAll();
     console.log(
       `${res.resources} Existing records in container ${containerId} `
     );
 
-    switch (program.opts().bulkOperation) {
-      case 'Create':
-        console.warn('Create is not implemented yet');
-        break;
-      case 'Upsert':
-        await bulkUpsertFolder(container, program.opts().dataFolder);
-        break;
-      case 'Delete':
-        if (program.opts().query)
-          //-q takes precedence over -qf
-          await bulkDeleteFromQuery(container, program.opts().query);
-        else await bulkDeleteFromFile(container, program.opts().queryFile);
-        break;
-      default:
-        console.error('Invalid bulk operation');
-    }
+    if (query) await bulkDeleteFromQuery(container, query);
+    else await bulkDeleteFromFile(container, queryFile);
 
     const res2 = await container.items.query(querySpec).fetchAll();
     console.log(`${res2.resources} records after the operation `);
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
+    exit(1);
   }
-}
+};
 
-//!!! START THE MAIN FUNCTION !!! =>>>
-main().catch((error) => {
-  console.error('Error occurred:', error.message);
-  exit(1);
-});
+//get command line arguments
+const program = new Command();
+program
+  .name('cbops')
+  .description(
+    'Executes bulk operations - Create, Upsert on provided folder with JSON files, and Delete on provided query.'
+  )
+  .version('1.0.0')
+  .option(
+    '-e, --env <name>',
+    'environment name like dev, qa, prod. You need to have .env.<name> file in the root folder. If no name provided the tool will use .env file'
+  );
+
+program
+  .command('delete')
+  .option(
+    '-q, --query <simple query>',
+    'A simple query that returs the records to be deleted. Example: SELECT * FROM c WHERE c.id = "1"'
+  )
+  .option(
+    '-qf, --queryFile <fullQueryFileName>',
+    'fileName with full path to file with query that returs the records to be deleted. -q takes precedence over -qf'
+  )
+  .action(deleteOp);
+
+program
+  .command('upsert')
+  .argument(
+    '<data-folder>',
+    'the full folder name where the JSON files are located'
+  )
+  .action(upsertOp);
+
+program.parse();
+
+// console.dir(program.opts());
+// console.dir(program.args);
+
+// the Delete operation requires query or queryFile
+// if (
+//   program.opts().bulkOperation === 'Delete' &&
+//   !(program.opts().query || program.opts().queryFile)
+// ) {
+//   console.error('Option -q or -qf is required when -o is Delete');
+//   process.exit(1);
+// }
