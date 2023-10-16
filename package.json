@@ -1,6 +1,6 @@
 {
   "name": "cbops",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cosmos DB Bulk Operations CLI, that can load objects from JSON files and create or upsert them, or delete items from Container, based on provided query.",
   "main": "index.js",
   "scripts": {
