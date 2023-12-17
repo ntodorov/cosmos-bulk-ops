@@ -1,5 +1,7 @@
 # `cbops` - CosmosDB Bulk Operations
 
+[![Coverage Status](https://coveralls.io/repos/github/ntodorov/cosmos-bulk-ops/badge.svg?branch=master)](https://coveralls.io/github/ntodorov/cosmos-bulk-ops?branch=master)
+
 CLI for bulk operations on CosmosDB container.
 Supports - Create, Upsert and Delete operations.
 
