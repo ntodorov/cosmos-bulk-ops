@@ -4,7 +4,7 @@
   "description": "Cosmos DB Bulk Operations CLI, that can load objects from JSON files and create or upsert them, or delete items from Container, based on provided query.",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "start": "node index.js",
     "lint": "eslint ."
   },
