@@ -4,7 +4,7 @@ const {
   validateFiles,
   loadFile,
   formatTime,
-  loadJsonFileNames,
+  readJsonFileNames,
   logErrors,
 } = require('./utils');
 
@@ -15,7 +15,7 @@ async function bulkUpsertFolder(container, dataFolder) {
   const start = new Date().getTime();
   let totalRecords = 0;
 
-  const jsonFiles = loadJsonFileNames(dataFolder);
+  const jsonFiles = readJsonFileNames(dataFolder);
 
   validateFiles(jsonFiles, dataFolder);
 
