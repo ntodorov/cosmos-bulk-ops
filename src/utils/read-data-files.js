@@ -4,11 +4,9 @@ const path = require('path');
 function readJsonFileNames(dataFolder) {
   const files = fs.readdirSync(dataFolder);
   const jsonFileNames = files.filter((file) => path.extname(file) === '.json');
-  // console.table(jsonFiles);
-  console.log('Sorting files...');
   // Sort the filenames using the Array.prototype.sort method
   jsonFileNames.sort(alphaNumericSort);
-  // console.table(jsonFiles);
+
   return jsonFileNames;
 }
 

@@ -1,6 +1,3 @@
-//generate index file from this folder
-// Path: src/utils/index.js
-
 const { logErrors } = require('./log-errors');
 const { formatTime } = require('./format-time');
 const { readJsonFileNames } = require('./read-data-files');
