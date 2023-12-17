@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/ntodorov/cosmos-bulk-ops#readme",
   "bugs": {
-    "url": "https://github.com/npm/cli/issues"
+    "url": "https://github.com/ntodorov/cosmos-bulk-ops/issues"
   },
   "license": "ISC",
   "dependencies": {
