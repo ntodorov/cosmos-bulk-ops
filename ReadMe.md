@@ -1,6 +1,6 @@
 # `cbops` - CosmosDB Bulk Operations
 
-[![Coverage Status](https://coveralls.io/repos/github/ntodorov/cosmos-bulk-ops/badge.svg?branch=master)](https://coveralls.io/github/ntodorov/cosmos-bulk-ops?branch=master)
+[![Linux Build][github-actions-ci-image]][github-actions-ci-url] [![Coverage Status][coveralls-image]][coveralls-url]
 
 CLI for bulk operations on CosmosDB container.
 Supports - Create, Upsert and Delete operations.
@@ -75,3 +75,8 @@ NOTE: if you want to save all console output to a file, use the redirect output 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+[github-actions-ci-image]: https://badgen.net/github/checks/expressjs/express/master?label=linux
+[github-actions-ci-url]: https://github.com/expressjs/express/actions/workflows/ci.yml
+[coveralls-image]: https://coveralls.io/repos/github/ntodorov/cosmos-bulk-ops/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/ntodorov/cosmos-bulk-ops?branch=master
