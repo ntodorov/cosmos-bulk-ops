@@ -1,11 +1,9 @@
 # `cbops` - CosmosDB Bulk Operations
 
-[![Linux Build][github-actions-ci-image]][github-actions-ci-url] [![Coverage Status][coveralls-image]][coveralls-url]
+[![NPM Version][npm-version-image]][npm-url] [![Linux Build][github-actions-ci-image]][github-actions-ci-url] [![Coverage Status][coveralls-image]][coveralls-url]
 
-CLI for bulk operations on CosmosDB container.
-Supports - Create, Upsert and Delete operations.
-
-TODO: finish the documentation!
+CLI for bulk operations on CosmosDB container - [NoSQL API](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/)
+Supports - [Create, Upsert and Delete operations](https://github.com/Azure/azure-sdk-for-js/blob/ee9a6e72ec8d9211a3765d27c7fd9d42d154256b/sdk/cosmosdb/cosmos/samples-dev/Bulk.ts#L81).
 
 ## Installation
 
@@ -80,3 +78,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [github-actions-ci-url]: https://github.com/expressjs/express/actions/workflows/ci.yml
 [coveralls-image]: https://coveralls.io/repos/github/ntodorov/cosmos-bulk-ops/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/ntodorov/cosmos-bulk-ops?branch=master
+[npm-url]: https://npmjs.org/package/cbops
+[npm-version-image]: https://badgen.net/npm/v/cbops
