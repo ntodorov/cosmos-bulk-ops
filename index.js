@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { Command, Option } = require('commander');
-const { CosmosClient, BulkOperationType } = require('@azure/cosmos');
+const { Command } = require('commander');
+const { CosmosClient } = require('@azure/cosmos');
 const { bulkUpsertFolder } = require('./src/bulk-upsert');
 const { exit } = require('process');
 const {

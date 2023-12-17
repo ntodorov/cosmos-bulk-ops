@@ -1,5 +1,4 @@
 const { BulkOperationType } = require('@azure/cosmos');
-const path = require('path');
 const fs = require('fs');
 
 const { formatTime, logErrors } = require('./utils');
