@@ -17,15 +17,43 @@ const containerMock = {
   },
 };
 
-// Setup the environment variable
-process.env.MAX_CONCURRENT_OPERATIONS = '5';
-
 // Reset the mocks before each test
 beforeEach(() => {
   jest.resetAllMocks();
 });
 
 describe('bulkDeleteFromQuery', () => {
+  it('handles if query is empty', async () => {
+    // Arrange
+    const mockQuery = 'SELECT * FROM c';
+    utils.formatTime.mockReturnValue('formatted time');
+    containerMock.read.mockResolvedValue({
+      resource: { partitionKey: { paths: ['/id'] } },
+    });
+
+    const mockQueryIterator = {
+      hasMoreResults: jest
+        .fn()
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false),
+      fetchNext: jest.fn().mockResolvedValue({}),
+    };
+
+    containerMock.items.query.mockResolvedValue(mockQueryIterator);
+    // Setup the environment variable
+    delete process.env.MAX_CONCURRENT_OPERATIONS;
+
+    // Act
+    await bulkDeleteFromQuery(containerMock, mockQuery);
+
+    // Assert
+    expect(containerMock.items.query).toHaveBeenCalledWith(mockQuery, {
+      maxItemCount: 5,
+    });
+    expect(containerMock.items.bulk).not.toHaveBeenCalled();
+    expect(utils.logErrors).toHaveBeenCalledWith([]);
+  });
+
   it('deletes documents from a query successfully', async () => {
     // Arrange
     const mockQuery = 'SELECT * FROM c';
@@ -50,6 +78,8 @@ describe('bulkDeleteFromQuery', () => {
     containerMock.items.bulk.mockResolvedValue(mockBulkOperationResult);
 
     const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    // Setup the environment variable
+    process.env.MAX_CONCURRENT_OPERATIONS = 10;
 
     // Act
     await bulkDeleteFromQuery(containerMock, mockQuery);
@@ -88,6 +118,8 @@ describe('bulkDeleteFromQuery', () => {
 
     const mockBulkOperationResult = [{ statusCode: 429 }];
     containerMock.items.bulk.mockResolvedValue(mockBulkOperationResult);
+    // Setup the environment variable
+    process.env.MAX_CONCURRENT_OPERATIONS = 20;
 
     // Act
     await bulkDeleteFromQuery(containerMock, mockQuery);
