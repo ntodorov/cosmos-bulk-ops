@@ -70,12 +70,6 @@ NOTE: if you want to save all console output to a file, use the redirect output 
 If you want to install it localy, clone the repository and install all dependencies with:
 `npm install`
 
-## TODO
-
-- [ ] add tests
-- [ ] handle throttling errors, by retrying the operations configurable number of times
-- [ ] add support bulk operation "Create"
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
