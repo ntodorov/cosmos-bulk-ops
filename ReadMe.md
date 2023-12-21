@@ -3,12 +3,9 @@
 [![NPM Version][npm-version-image]][npm-url] [![Linux Build][github-actions-ci-image]][github-actions-ci-url] [![Coverage Status][coveralls-image]][coveralls-url]
 
 CLI for bulk operations on CosmosDB container - [NoSQL API](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/)
-Supports - [Create, Upsert and Delete operations](https://github.com/Azure/azure-sdk-for-js/blob/ee9a6e72ec8d9211a3765d27c7fd9d42d154256b/sdk/cosmosdb/cosmos/samples-dev/Bulk.ts#L81).
+Supports - [Upsert and Delete operations](https://github.com/Azure/azure-sdk-for-js/blob/ee9a6e72ec8d9211a3765d27c7fd9d42d154256b/sdk/cosmosdb/cosmos/samples-dev/Bulk.ts#L81).
 
-## Installation
-
-Clone the repository and install all dependencies with:
-`npm install`
+If you want the rest of the operations, please create an issue or PR.
 
 ## Usage
 
@@ -24,6 +21,10 @@ Delete operation example:
 npx cbops delete --query "SELECT c.id, c.yourPartitionKeyField FROM c WHERE c.yourPartitionKeyField = 'SOME VALUE'"
 npx cbops delete --queryFile ./del.json
 ```
+
+WARNING!!! you need to provide environment variables for Cosmos DB account and container, see [Configuration](#configuration) section.
+The `.env` file shold be in the folder that you are executing the commands.
+Alternatively you can set the environment variables upfront via script or any other way.
 
 ## Parameters
 
@@ -64,7 +65,12 @@ NOTE: if you want to save all console output to a file, use the redirect output 
 
 `npx cbops upsert --data-folder ./data > output.log`
 
-##TODO
+## Installation
+
+If you want to install it localy, clone the repository and install all dependencies with:
+`npm install`
+
+## TODO
 
 - [ ] add tests
 - [ ] handle throttling errors, by retrying the operations configurable number of times
